@@ -1,2 +1,2 @@
 # RbT
-RbT: A Self Improving Software for Environment and Sustainability
+RbT: A Self Improving System for Environment and Sustainability
