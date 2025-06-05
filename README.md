@@ -6,3 +6,6 @@ Return by Train is an AI-driven forecasting system designed to address critical 
 Integrating the latest research on self-improving agents from Sakana AI, RbT evolves by learning from feedback loops and simulation outputs, enhancing its performance and recommendations autonomously. It uses the WeatherBench2 dataset for climate and atmospheric forecasting, creating simulations that guide proactive climate resilience, urban resource optimization, and circular economy strategies.
 
 By fusing cutting-edge machine learning with dynamic system modeling, RbT serves as a living digital twin for sustainable development, continuously refining its understanding of complex, interconnected urban and environmental systems to support Egypt’s Vision 2030 and global SDG targets.
+
+Current Progress:
+- MLP with feedback retraining based on new data availability. A 0.1.0.0 version of the intended outcome.
