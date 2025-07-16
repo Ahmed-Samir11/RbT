@@ -1,16 +1,22 @@
 # RbT: Real-time Carbon and WeatherBench2 Model Evaluation Platform
 
 ## Overview
-RbT is a platform for analyzing, predicting, and evaluating carbon emissions using both real-time UK carbon intensity data and the WeatherBench2 global weather benchmark. It features a modern React frontend and a FastAPI backend, supporting:
-- **Live UK Carbon Intensity Analysis**
-- **WeatherBench2 Model Evaluation** (using official cloud datasets)
-- **Side-by-side Data Analysis and Visualization**
+RbT is a platform for analyzing, predicting, and evaluating carbon emissions using both real-time UK carbon intensity data and the WeatherBench2 global weather benchmark. At its core, RbT features a **Kolmogorov-Arnold Network (KAN)** model with a self-improving feedback loop, enabling adaptive, AI-driven environmental forecasting and continuous learning from user feedback.
+
+## Core Essence: KAN & Self-Improving Loop
+- **Kolmogorov-Arnold Network (KAN):**
+  - The backend model (`EcoKAN`) is based on KANs, designed for nonlinear, high-dimensional forecasting of carbon emissions and SDG scores.
+  - The model architecture is flexible and can evolve over time.
+- **Self-Improving Feedback Loop:**
+  - User and system feedback on predictions is collected and stored.
+  - When enough new feedback is available, the model is retrained automatically (`scripts/retrain.py`), updating its weights and architecture for improved accuracy.
+  - Each retraining cycle is versioned and performance is tracked, supporting a true self-improving AI workflow.
 
 ## Features
 - Home page with three options: Real-time UK Carbon, WeatherBench2 Evaluation, and Compare Both
 - Real-time data analysis and visualization
 - Model evaluation on WeatherBench2 public datasets (cloud Zarr)
-- Feedback loop and retraining support
+- Feedback loop and retraining support for continuous model improvement
 
 ## Quick Start
 
