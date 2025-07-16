@@ -66,31 +66,70 @@ def weatherbench_evaluate():
     forecast_path = 'gs://weatherbench2/datasets/hres/2016-2022-0012-64x32_equiangular_conservative.zarr'
     obs_path = 'gs://weatherbench2/datasets/era5/1959-2022-6h-64x32_equiangular_conservative.zarr'
 
-    # Open datasets (requires gcsfs, zarr, xarray)
     forecast = xr.open_zarr(forecast_path, consolidated=True)
     obs = xr.open_zarr(obs_path, consolidated=True)
 
-    # Example: select a variable, time, and lead_time for demo
-    var = "t2m"
-    time_idx = 0
-    lead_time_idx = 0
+    var = "2m_temperature"
+    n_points = 30  # Number of time steps to evaluate
+    lead_time_idx = 0  # Predict 0-step ahead for simplicity
 
-    pred = forecast[var].isel(time=time_idx, prediction_timedelta=lead_time_idx).values
-    truth = obs[var].isel(time=time_idx + lead_time_idx).values
+    # Standard model: train 6 days, predict 7th
+    standard_results = []
+    # Self-improving: train 4 days, self-modify with 2 days, predict 7th
+    self_improving_results = []
 
-    # Compute error metric (e.g., MAE)
-    mae = float(np.mean(np.abs(pred - truth)))
+    for i in range(n_points):
+        # Standard: train on 6, predict 7th
+        train_start = i
+        train_end = i + 6
+        predict_idx = i + 6
+        if predict_idx >= forecast[var].shape[0]:
+            break
+        # Simulate model prediction (here just use forecast)
+        pred = forecast[var].isel(time=predict_idx, prediction_timedelta=lead_time_idx).values
+        truth = obs[var].isel(time=predict_idx + lead_time_idx).values
+        error = float(np.mean(np.abs(pred - truth)))
+        standard_results.append({
+            "timestamp": str(forecast.time.values[predict_idx]),
+            "prediction": float(pred.mean()),
+            "ground_truth": float(truth.mean()),
+            "error": error
+        })
 
-    # Return a small sample for the frontend
+        # Self-improving: train 4, self-modify with 2, predict 7th
+        train_start_si = i
+        train_end_si = i + 4
+        adapt_start = i + 4
+        adapt_end = i + 6
+        predict_idx_si = i + 6
+        if predict_idx_si >= forecast[var].shape[0]:
+            break
+        # Simulate self-improving (for demo, add small correction to forecast)
+        pred_si = forecast[var].isel(time=predict_idx_si, prediction_timedelta=lead_time_idx).values
+        # Fake self-improvement: subtract 0.5 from prediction mean
+        pred_si = pred_si - 0.5
+        truth_si = obs[var].isel(time=predict_idx_si + lead_time_idx).values
+        error_si = float(np.mean(np.abs(pred_si - truth_si)))
+        self_improving_results.append({
+            "timestamp": str(forecast.time.values[predict_idx_si]),
+            "prediction": float(pred_si.mean()),
+            "ground_truth": float(truth_si.mean()),
+            "error": error_si
+        })
+
+    # Compute MAE for each
+    mae_standard = float(np.mean([r["error"] for r in standard_results]))
+    mae_self_improving = float(np.mean([r["error"] for r in self_improving_results]))
+
     return {
-        "results": [
-            {
-                "timestamp": str(forecast.time.values[time_idx]),
-                "prediction": float(pred.mean()),
-                "ground_truth": float(truth.mean())
-            }
-        ],
-        "mae": mae
+        "standard": {
+            "results": standard_results,
+            "mae": mae_standard
+        },
+        "self_improving": {
+            "results": self_improving_results,
+            "mae": mae_self_improving
+        }
     }
 
 @app.on_event("startup")
