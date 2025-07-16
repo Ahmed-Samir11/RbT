@@ -5,6 +5,9 @@ from model.ecokan_forecasting import EcoKAN
 import database
 from cache import cache, init_cache
 import security
+import xarray as xr
+import numpy as np
+import weatherbench2
 
 app = FastAPI()
 
@@ -56,6 +59,39 @@ async def submit_feedback(prediction_id: str, actual_emissions: float, rating: i
 def private_endpoint(token: str = Depends(security.decode_jwt)):
     # Example protected endpoint
     return {"msg": "You are authenticated!"}
+
+@app.get("/weatherbench/evaluate")
+def weatherbench_evaluate():
+    # Paths to cloud Zarr datasets (WeatherBench2 quickstart)
+    forecast_path = 'gs://weatherbench2/datasets/hres/2016-2022-0012-64x32_equiangular_conservative.zarr'
+    obs_path = 'gs://weatherbench2/datasets/era5/1959-2022-6h-64x32_equiangular_conservative.zarr'
+
+    # Open datasets (requires gcsfs, zarr, xarray)
+    forecast = xr.open_zarr(forecast_path, consolidated=True)
+    obs = xr.open_zarr(obs_path, consolidated=True)
+
+    # Example: select a variable, time, and lead_time for demo
+    var = "t2m"
+    time_idx = 0
+    lead_time_idx = 0
+
+    pred = forecast[var].isel(time=time_idx, prediction_timedelta=lead_time_idx).values
+    truth = obs[var].isel(time=time_idx + lead_time_idx).values
+
+    # Compute error metric (e.g., MAE)
+    mae = float(np.mean(np.abs(pred - truth)))
+
+    # Return a small sample for the frontend
+    return {
+        "results": [
+            {
+                "timestamp": str(forecast.time.values[time_idx]),
+                "prediction": float(pred.mean()),
+                "ground_truth": float(truth.mean())
+            }
+        ],
+        "mae": mae
+    }
 
 @app.on_event("startup")
 async def startup_event():
