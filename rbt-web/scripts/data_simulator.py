@@ -2,8 +2,8 @@ import sys
 import os
 import random
 from datetime import datetime, timedelta
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../backend')))
-import database
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from backend import database
 
 def simulate_data(n=200):
     for _ in range(n):
